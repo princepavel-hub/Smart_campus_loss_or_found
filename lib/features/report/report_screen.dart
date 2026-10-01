@@ -26,6 +26,8 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   final _verification = TextEditingController();
   final _dropOff = TextEditingController();
   final _contact = TextEditingController();
+  final _otherCategory = TextEditingController();
+  final _otherLocation = TextEditingController();
   String _category = 'Electronics';
   String _location = 'Central Library';
   XFile? _photo;
@@ -41,6 +43,8 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
       _verification,
       _dropOff,
       _contact,
+      _otherCategory,
+      _otherLocation,
     ]) {
       controller.dispose();
     }
@@ -78,34 +82,62 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
+            key: const Key('report_category'),
             initialValue: _category,
             decoration: const InputDecoration(
               labelText: 'Category',
               prefixIcon: Icon(Icons.category_outlined),
             ),
-            items: categories
-                .skip(1)
+            items: [...categories.skip(1), 'Other']
                 .map(
                   (value) => DropdownMenuItem(value: value, child: Text(value)),
                 )
                 .toList(),
             onChanged: (value) => setState(() => _category = value!),
           ),
+          if (_category == 'Other') ...[
+            const SizedBox(height: 12),
+            TextFormField(
+              key: const Key('report_other_category'),
+              controller: _otherCategory,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Specify category',
+                prefixIcon: Icon(Icons.edit_outlined),
+              ),
+              validator: _required,
+            ),
+          ],
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
+            key: const Key('report_location'),
             initialValue: _location,
             decoration: InputDecoration(
               labelText: _isFound ? 'Location found' : 'Last known location',
               prefixIcon: const Icon(Icons.location_on_outlined),
             ),
-            items: campusLocations
-                .skip(1)
+            items: [...campusLocations.skip(1), 'Other']
                 .map(
                   (value) => DropdownMenuItem(value: value, child: Text(value)),
                 )
                 .toList(),
             onChanged: (value) => setState(() => _location = value!),
           ),
+          if (_location == 'Other') ...[
+            const SizedBox(height: 12),
+            TextFormField(
+              key: const Key('report_other_location'),
+              controller: _otherLocation,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: _isFound
+                    ? 'Specify where it was found'
+                    : 'Specify last known location',
+                prefixIcon: const Icon(Icons.edit_location_alt_outlined),
+              ),
+              validator: _required,
+            ),
+          ],
           const SizedBox(height: 12),
           TextFormField(
             controller: _description,
@@ -278,8 +310,8 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     final item = CampusItem(
       id: id,
       title: _title.text.trim(),
-      category: _category,
-      location: _location,
+      category: _category == 'Other' ? _otherCategory.text.trim() : _category,
+      location: _location == 'Other' ? _otherLocation.text.trim() : _location,
       description: _description.text.trim(),
       reportKind: widget.kind,
       status: _isFound ? ItemStatus.inVault : ItemStatus.lost,
